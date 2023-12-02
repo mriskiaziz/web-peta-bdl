@@ -343,7 +343,7 @@
         formData.append("description", e.desc);
         formData.append(
           "geometry",
-          [e.geometry.lat, e.geometry.lng, 0].map(Number)
+          [e.geometry.lng, e.geometry.lat, 0].map(Number)
         );
 
         link = "https://api-bdl-geo.vercel.app/";
