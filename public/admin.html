@@ -55,6 +55,9 @@
       .image-upload > input {
         display: none;
       }
+      textarea {
+        resize: none;
+      }
     </style>
   </head>
 
@@ -153,7 +156,7 @@
         document.getElementById(
           "tombol"
         ).innerHTML = `<a class="nav-link" href="login.html">Login</a>`;
-        document.getElementById("body").classList.add("d-none");
+        // document.getElementById("body").classList.add("d-none");
       }
     });
   </script>
@@ -162,6 +165,7 @@
 
   <script>
     const map = L.map("map").setView([-5.397273, 105.270996], 12);
+    const baru = [];
 
     const tiles = L.tileLayer(
       "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -177,6 +181,37 @@
 
       $(".del").click(function () {
         map.removeLayer(tempMarker);
+        function removeItemOnce(arr, value) {
+          var index = arr.indexOf(value);
+          if (index > -1) {
+            arr.splice(index, 1);
+          }
+          return arr;
+        }
+        baru.map((e) => {
+          if (e.geometry == tempMarker.getLatLng()) {
+            removeItemOnce(baru, e);
+          }
+        });
+      });
+      $(".simpan").click(function () {
+        var a = {
+          nama: document.getElementById("name").value,
+          alamat: document.getElementById("alamat").value || "",
+          gambarr: document.getElementById("gambar").value || "",
+          desc: document.getElementById("desc").value || "",
+          geometry: tempMarker.getLatLng(),
+        };
+        var b = false;
+        baru.map((e, i) => {
+          if (e.geometry == tempMarker.getLatLng()) {
+            b = true;
+            baru[i] = a;
+          }
+        });
+        if (!b) {
+          baru.push(a);
+        }
       });
     }
 
@@ -191,7 +226,18 @@
         map.panTo(new L.LatLng(position.lat, position.lng));
       });
       group.addLayer(marker);
-      marker.bindPopup("<button class='del'>Delete</button>");
+      marker.bindPopup(`
+        <div class="d-flex flex-column">
+          <input type="text" class="fs-6 fw-bold" value="Judul" id="name" placeholder="Judul..." />
+          <input type="text" class="my-1" id="alamat" placeholder="Alamat..." />
+          <input type="text" class="my-1" id="gambar" placeholder="Gambar..." />
+          <textarea name="desc" id="desc" id="desc" class="my-1" cols="5" rows="5" placeholder="Deskripsi"></textarea>
+        </div>
+        <div class='d-flex mt-2'>
+          <button class='simpan'>simpan</button>
+          <button class='del ms-2'>Delete</button>
+        <div>
+      `);
       marker.on("popupopen", deleteMarker);
     }
 
@@ -274,7 +320,44 @@
       const data = group
         .getLayers()
         .map((doc) => ({ ...doc.getLatLng(), id: doc.id }));
-      console.log(data);
+
+      // const formData = new FormData();
+      // formData.append("name", "John");
+      // formData.append("address", "John123");
+      // formData.append("image", "John123");
+      // formData.append("description", "John123");
+      // formData.append("geometry", [1.67, -2.999, 3.09877]);
+
+      // fetch("http://localhost:3000/rmh-sakit", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+      baru.map((e) => {
+        const formData = new FormData();
+        formData.append("name", e.nama);
+        formData.append("address", e.alamat);
+        formData.append("image", e.gambar);
+        formData.append("description", e.desc);
+        formData.append(
+          "geometry",
+          [e.geometry.lat, e.geometry.lng, 0].map(Number)
+        );
+
+        link = "https://api-bdl-geo.vercel.app/";
+
+        if (document.getElementById("pilihan").value == "pusat perbelanjaan") {
+          link = link + "pusat-belanja";
+        } else if (document.getElementById("pilihan").value == "kantor pos") {
+          link = link + "data";
+        } else {
+          link = link + "rmh-sakit";
+        }
+
+        fetch(link, {
+          method: "POST",
+          body: formData,
+        });
+      });
     }
   </script>
 </html>
